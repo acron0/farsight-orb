@@ -28,8 +28,10 @@
                           :source-paths ["env/dev/cljs" "src/cljs"]
                           :compiler {:output-to            "resources/public/js/app.js"
                                      :output-dir           "resources/public/js/out"
-                                     :source-map           "resources/public/js/out.js.map"
+                                     :source-map true
                                      :source-map-timestamp true
+                                     :optimizations :none
+                                     :pretty-print  true
                                      :preamble             ["react/react.min.js"]}}]
                 :figwheel-server server}]
     (fig-auto/autobuild* config)))
