@@ -1,0 +1,4 @@
+[submodule "src/clj/clj-lolapi"]
+	path = src/clj/clj-lolapi
+	url = git@github.com:acron0/clj-lolapi.git
+	branch = esports

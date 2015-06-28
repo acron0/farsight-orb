@@ -4,7 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :source-paths ["src/clj"]
+  :source-paths ["src/clj", "src/clj/clj-lolapi/src"]
 :repl-options {:timeout 200000} ;; Defaults to 30000 (30 seconds)
 
   :test-paths ["spec/clj"]
@@ -16,10 +16,10 @@
                  [compojure "1.3.1"]
                  [enlive "1.1.5"]
                  [om "0.8.0-rc1"]
+                 [clj-http "0.7.9"]
                  [environ "1.0.0"]
                  [http-kit "2.1.19"]
                  [com.taoensso/sente "1.4.1"]]
-
   :plugins [[lein-cljsbuild "1.0.3"]
             [lein-environ "1.0.0"]]
 

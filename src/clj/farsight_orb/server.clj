@@ -14,15 +14,13 @@
             [environ.core :refer [env]]
             [org.httpkit.server :refer [run-server]]
             [taoensso.sente :as sente]
-            [taoensso.sente.server-adapters.http-kit :refer (sente-web-server-adapter)]))
+            [taoensso.sente.server-adapters.http-kit :refer (sente-web-server-adapter)]
+            [farsight-orb.data :as data]
+            [farsight-orb.events :as events]))
 
 (defn generate-uid [& _]
   (rand-int 10000))
 
-(defn session-uid
-  "Convenient to extract the UID that Sente needs from the request."
-  [req]
-  (get-in req [:session :uid]))
 
 ;;;;;;;;;;:
 ;; Sente ;;
@@ -48,11 +46,22 @@
   [req]
   {:status 200
    :headers {"Content-Type" "text/html; charset=utf-8"}
-   :session (if (session-uid req)
+   :session (if (events/session-uid req)
               (:session req)
               (assoc (:session req) :uid (generate-uid)))
    ;;:body (slurp "index.html")})
    :body (page)})
+
+(defn initial-payload
+  "Gets the initial data set..."
+  [req]
+  {:status 200
+   :headers {"Content-Type" "application/edn"}
+   :session (if (events/session-uid req)
+              (:session req)
+              (assoc (:session req) :uid (generate-uid)))
+   :body (data/initial-payload)})
+
 
 (defroutes routes
   (resources "/")
@@ -65,8 +74,7 @@
   (POST "/chsk" req (ring-ajax-post                req))
   ;;;;;;;;;;:
 
-  (GET  "/"  req (#'index req)))
-  ;;(GET "/*" req (page)))
+  (GET  "/"     req (#'index req)))
 
 (def http-handler
   (->
@@ -87,40 +95,12 @@
   (auto-reload *ns*)
   (start-figwheel))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defmulti handle-event
-  "Handle events based on the event ID."
-  (fn [[ev-id ev-arg] ring-req] ev-id))
-
-(defmethod handle-event :test/reverse
-  [[_ msg] req]
-  (when-let [uid (session-uid req)]
-    (chsk-send! uid [:test/reply (clojure.string/reverse msg)])))
-
-;; When the client pings us, send back the session state:
-
-;;(defmethod handle-event :chsk/ws-ping
-;;  [_ req]
-;;  nil)
-
-;; Handle unknown events.
-;; Note: this includes the Sente implementation events like:
-;; - :chsk/uidport-open
-;; - :chsk/uidport-close
-
-(defmethod handle-event :default
-  [event req]
-  (println "Default event handler:" event))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (defn event-loop
   "Handle inbound Sente events."
   []
   (go (loop [{:keys [client-uuid ring-req event] :as data} (<! ch-chsk)]
         (println "-" event)
-        (thread (handle-event event ring-req))
+        (thread (events/handle-event chsk-send! event ring-req))
         (recur (<! ch-chsk)))))
 
 (defn run [& [port]]
