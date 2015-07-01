@@ -4,7 +4,9 @@
   (:require [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
             [cljs.core.async :as async :refer (<! >! put! chan)]
-            [taoensso.sente  :as sente :refer (cb-success?)]))
+            [taoensso.sente  :as sente :refer (cb-success?)]
+            [farsight-orb.utils :as util]
+            [om-bootstrap.button :as b]))
 
 (enable-console-print!)
 
@@ -22,7 +24,10 @@
   )
 ;;;;;;;;;;:
 
-(defonce app-state (atom {:text "" :events [] :connected false}))
+(defonce app-state (atom {:text ""
+                          :events []
+                          :connected false
+                          :players []}))
 
 (defn submit-new-text [data owner]
   (let [new-text (-> (om/get-node owner "new-text") .-value)]
@@ -67,6 +72,14 @@
   Selects views based on session state."
   [app owner]
   (reify
+    om/IInitState
+    (init-state [_]
+                (util/edn-xhr
+                 {:method :get
+                  :url (str "data/players")
+                  :on-complete
+                   (fn [res]
+                     (om/update! app :players res))}))
     om/IWillMount
     (will-mount [this]
                 (event-loop app owner))
@@ -78,7 +91,7 @@
                      (dom/div nil
                               (dom/h2 nil "Input")
                               (dom/input #js {:type "text" :ref "new-text" :placeholder "Enter some text..."})
-                              (dom/button #js {:onClick #(submit-new-text app owner)} "Submit"))
+                              (b/button {:bs-style "primary" :on-click #(submit-new-text app owner)} "Submit"))
                      (dom/div nil
                               (dom/h2 nil "App-state Modification")
                               (dom/span nil (:text app))

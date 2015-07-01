@@ -18,6 +18,11 @@
             [farsight-orb.data :as data]
             [farsight-orb.events :as events]))
 
+
+;;
+(def static-data (atom {:players []}))
+
+;;
 (defn generate-uid [& _]
   (rand-int 10000))
 
@@ -52,15 +57,15 @@
    ;;:body (slurp "index.html")})
    :body (page)})
 
-(defn initial-payload
-  "Gets the initial data set..."
-  [req]
+(defn get-static-data
+  "Gets data from the static atom"
+  [key req]
   {:status 200
    :headers {"Content-Type" "application/edn"}
    :session (if (events/session-uid req)
               (:session req)
               (assoc (:session req) :uid (generate-uid)))
-   :body (data/initial-payload)})
+   :body (pr-str (get @static-data key))})
 
 
 (defroutes routes
@@ -74,7 +79,8 @@
   (POST "/chsk" req (ring-ajax-post                req))
   ;;;;;;;;;;:
 
-  (GET  "/"     req (#'index req)))
+  (GET  "/data/players" req (#'get-static-data :players req))
+  (GET  "/"             req (#'index req)))
 
 (def http-handler
   (->
@@ -103,11 +109,24 @@
         (thread (events/handle-event chsk-send! event ring-req))
         (recur (<! ch-chsk)))))
 
+(defn update-static-data
+  "Updates the static data"
+  []
+  (reset! static-data
+          {:players data/player-list}))
+
 (defn run [& [port]]
+
+  ;; sente events
   (event-loop)
   (println "Sente event loop is running.")
-  (when is-dev?
-    (run-auto-reload))
+
+  ;; static data
+  (update-static-data)
+  (println "Static data was updated.")
+
+  ;;(when is-dev?
+  ;;  (run-auto-reload))
   (run-web-server port))
 
 (defn -main [& [port]]

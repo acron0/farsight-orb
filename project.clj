@@ -16,6 +16,7 @@
                  [compojure "1.3.1"]
                  [enlive "1.1.5"]
                  [om "0.8.0-rc1"]
+                 [racehub/om-bootstrap "0.5.1"]
                  [clj-http "0.7.9"]
                  [environ "1.0.0"]
                  [http-kit "2.1.19"]

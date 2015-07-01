@@ -1,7 +1,6 @@
 (ns farsight-orb.data
-  (:require [clj-lolapi.esports :as lolesp]))
+  (:require [lolesports.core :as lolesp]))
 
-(defn initial-payload
+(def player-list
   "Initial payload"
-  []
-  (lolesp/tournaments))
+  lolesp/tier-1-player-names)

@@ -46,6 +46,10 @@
           (map (fn [player]
                  (assoc player :team (:acronym team))) (get-roster team))) tier-1-teams))
 
+(def tier-1-player-names
+  "The players formatted to just return their name and team tag"
+  (mapv (fn [player] (str (:team player) " " (:name player))) tier-1-players))
+
 (defn get-player-stats
   "returnd the stats of a player"
   ([player]
