@@ -3,7 +3,12 @@
 
 ## Development
 
-Open a terminal and type `lein repl` to start a Clojure REPL
+First
+
+    git submodule init
+    git submodule update
+
+Then open a terminal and type `lein repl` to start a Clojure REPL
 (interactive prompt).
 
 In the REPL, type
