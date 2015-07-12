@@ -2,11 +2,11 @@
   (:require-macros
    [cljs.core.async.macros :as asyncm :refer (go go-loop)])
   (:require [om.core :as om :include-macros true]
-            [om.dom :as dom :include-macros true]
+            [om-tools.dom :as dom :include-macros true]
             [cljs.core.async :as async :refer (<! >! put! chan)]
             [taoensso.sente  :as sente :refer (cb-success?)]
             [farsight-orb.utils :as util]
-            [om-bootstrap.button :as b]))
+            [om-bootstrap.grid :as g]))
 
 (enable-console-print!)
 
@@ -65,6 +65,9 @@
           nil)
         (recur (:event (<! ch-chsk))))))
 
+(defn update-player-search [something]
+  (println (type something)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn application
@@ -85,18 +88,15 @@
                 (event-loop app owner))
     om/IRenderState
     (render-state [this state]
-            ( if (not (:connected app))
+            (if (not (:connected app))
               (dom/span nil "Loading...")
-            (dom/div nil
-                     (dom/div nil
-                              (dom/h2 nil "Input")
-                              (dom/input #js {:type "text" :ref "new-text" :placeholder "Enter some text..."})
-                              (b/button {:bs-style "primary" :on-click #(submit-new-text app owner)} "Submit"))
-                     (dom/div nil
-                              (dom/h2 nil "App-state Modification")
-                              (dom/span nil (:text app))
-                              (dom/h2 nil "WS responses")
-                              (apply dom/ul nil (map #(dom/li nil %) (:events app)))))))))
+              (dom/div {:class "container"}
+                       (g/grid {}
+                               (g/row {:class "player-search-input"}
+                                      (dom/h2 "Search")
+                                      (dom/input {:type "text" :ref "new-text" :placeholder "Enter a player name or tag..." :style {:width "100%"} :onInput #(update-player-search %)}))
+                               (g/row {:class "player-search-results"}
+                                      (dom/h2 "Results"))))))))
 
 (defn main []
   (om/root

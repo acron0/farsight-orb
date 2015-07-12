@@ -125,8 +125,8 @@
   (update-static-data)
   (println "Static data was updated.")
 
-  ;;(when is-dev?
-  ;;  (run-auto-reload))
+  (when is-dev?
+    (run-auto-reload))
   (run-web-server port))
 
 (defn -main [& [port]]
