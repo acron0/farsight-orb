@@ -27,7 +27,8 @@
 (defonce app-state (atom {:text ""
                           :events []
                           :connected false
-                          :players []}))
+                          :players []
+                          :auto-complete-results []}))
 
 (defn submit-new-text [data owner]
   (let [new-text (-> (om/get-node owner "new-text") .-value)]
@@ -65,8 +66,8 @@
           nil)
         (recur (:event (<! ch-chsk))))))
 
-(defn update-player-search [something]
-  (println (type something)))
+(defn update-player-search [value]
+  (println value))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -82,7 +83,8 @@
                   :url (str "data/players")
                   :on-complete
                    (fn [res]
-                     (om/update! app :players res))}))
+                     (om/update! app :players
+                                 res))}))
     om/IWillMount
     (will-mount [this]
                 (event-loop app owner))
@@ -94,9 +96,19 @@
                        (g/grid {}
                                (g/row {:class "player-search-input"}
                                       (dom/h2 "Search")
-                                      (dom/input {:type "text" :ref "new-text" :placeholder "Enter a player name or tag..." :style {:width "100%"} :onInput #(update-player-search %)}))
+                                      (dom/input {:type "text"
+                                                  :ref "new-text"
+                                                  :placeholder "Enter a player name or tag..."
+                                                  :style {:width "100%"}
+                                                  :onInput #(update-player-search (.. % -target -value))}))
                                (g/row {:class "player-search-results"}
-                                      (dom/h2 "Results"))))))))
+                                      (dom/h2 "Results")
+                                      (if (empty? (:auto-complete-results @app-state))
+                                        (dom/span "No results.")
+                                        (dom/ul
+                                         (map
+                                          #(dom/li %)
+                                          (:auto-complete-results @app-state)))))))))))
 
 (defn main []
   (om/root
