@@ -68,7 +68,8 @@
 
 (defn update-player-search [value app]
   (let [pattern (re-pattern value)
-        results (filter #(re-find pattern %) (:players app))]
+        results (filter
+                 #(re-find pattern (clojure.string/lower-case %)) (:players app))]
     (om/update! app :auto-complete-results results)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
