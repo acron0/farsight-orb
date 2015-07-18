@@ -105,7 +105,7 @@
   "Handle inbound Sente events."
   []
   (go (loop [{:keys [client-uuid ring-req event] :as data} (<! ch-chsk)]
-        (println "-" event)
+       ;; (println "-" event)
         (thread (events/handle-event chsk-send! event ring-req))
         (recur (<! ch-chsk)))))
 

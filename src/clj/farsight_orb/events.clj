@@ -26,5 +26,5 @@
 ;; - :chsk/uidport-close
 
 (defmethod handle-event :default
-  [send-fn event req]
-  (println "Default event handler:" event))
+  [send-fn event req] nil
+  (comment (println "Default event handler:" event)))

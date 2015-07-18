@@ -66,8 +66,10 @@
           nil)
         (recur (:event (<! ch-chsk))))))
 
-(defn update-player-search [value]
-  (println value))
+(defn update-player-search [value app]
+  (let [pattern (re-pattern value)
+        results (filter #(re-find pattern %) (:players app))]
+    (om/update! app :auto-complete-results results)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -100,7 +102,7 @@
                                                   :ref "new-text"
                                                   :placeholder "Enter a player name or tag..."
                                                   :style {:width "100%"}
-                                                  :onInput #(update-player-search (.. % -target -value))}))
+                                                  :onInput #(update-player-search (.. % -target -value) app)}))
                                (g/row {:class "player-search-results"}
                                       (dom/h2 "Results")
                                       (if (empty? (:auto-complete-results @app-state))
