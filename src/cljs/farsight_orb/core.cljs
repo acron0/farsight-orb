@@ -67,10 +67,12 @@
         (recur (:event (<! ch-chsk))))))
 
 (defn update-player-search [value app]
-  (let [pattern (re-pattern value)
-        results (filter
-                 #(re-find pattern (clojure.string/lower-case %)) (:players app))]
-    (om/update! app :auto-complete-results results)))
+  (if (empty? value)
+    (om/update! app :auto-complete-results [])
+    (let [pattern (re-pattern value)
+           results (filter
+                     #(re-find pattern (clojure.string/lower-case %)) (:players app))]
+        (om/update! app :auto-complete-results results))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
