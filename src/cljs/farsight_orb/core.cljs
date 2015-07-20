@@ -28,7 +28,8 @@
                           :events []
                           :connected false
                           :players []
-                          :auto-complete-results []}))
+                          :auto-complete-results []
+                          :ac-chan (chan)}))
 
 (defn submit-new-text [data owner]
   (let [new-text (-> (om/get-node owner "new-text") .-value)]
@@ -66,13 +67,20 @@
           nil)
         (recur (:event (<! ch-chsk))))))
 
+(defn autocomplete-results-loop
+  "Handle auto-complete results asynchronously"
+  [app owner]
+  (go (while true
+        (let [result (<! (:ac-chan app))]
+        (om/transact! app :auto-complete-results #(conj % result))))))
+
 (defn update-player-search [value app]
-  (if (empty? value)
-    (om/update! app :auto-complete-results [])
-    (let [pattern (re-pattern value)
-           results (filter
-                     #(re-find pattern (clojure.string/lower-case %)) (:players app))]
-        (om/update! app :auto-complete-results results))))
+  (om/update! app :auto-complete-results [])
+  (if (not (empty? value))
+    (let [pattern (re-pattern (clojure.string/lower-case value))]
+      (doseq [player (:players app)]
+        (if (re-find pattern (clojure.string/lower-case player))
+          (put! (:ac-chan app) player))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -92,7 +100,8 @@
                                  res))}))
     om/IWillMount
     (will-mount [this]
-                (event-loop app owner))
+      (event-loop app owner)
+      (autocomplete-results-loop app owner))
     om/IRenderState
     (render-state [this state]
             (if (not (:connected app))
@@ -108,8 +117,7 @@
                                                   :onInput #(update-player-search (.. % -target -value) app)}))
                                (g/row {:class "player-search-results"}
                                       (dom/h2 "Results")
-                                      (if (empty? (:auto-complete-results @app-state))
-                                        (dom/span "No results.")
+                                      (if (not (empty? (:auto-complete-results @app-state)))
                                         (dom/ul
                                          (map
                                           #(dom/li %)
