@@ -29,7 +29,8 @@
                           :connected false
                           :players []
                           :auto-complete-results []
-                          :ac-chan (chan)}))
+                          :ac-chan (chan)
+                          :ac-count 0}))
 
 (defn submit-new-text [data owner]
   (let [new-text (-> (om/get-node owner "new-text") .-value)]
@@ -70,17 +71,23 @@
 (defn autocomplete-results-loop
   "Handle auto-complete results asynchronously"
   [app owner]
-  (go (while true
-        (let [result (<! (:ac-chan app))]
-        (om/transact! app :auto-complete-results #(conj % result))))))
+  (let [counter (atom 0)]
+    (go (while true
+          (let [{:keys [player ac-idx]} (<! (:ac-chan app))]
+            (when (not (= @counter ac-idx))
+              (reset! counter ac-idx)
+              (om/update! app :auto-complete-results []))
+            (om/transact! app :auto-complete-results #(conj % player)))))))
 
 (defn update-player-search [value app]
-  (om/update! app :auto-complete-results [])
-  (if (not (empty? value))
-    (let [pattern (re-pattern (clojure.string/lower-case value))]
-      (doseq [player (:players app)]
-        (if (re-find pattern (clojure.string/lower-case player))
-          (put! (:ac-chan app) player))))))
+  (let [new-ac-count (inc (:ac-count app))]
+    (swap! app-state assoc :ac-count new-ac-count)
+    (if (empty? value)
+      (om/update! app :auto-complete-results [])
+      (let [pattern (re-pattern (clojure.string/lower-case value))]
+        (doseq [player (:players app)]
+          (if (re-find pattern (clojure.string/lower-case player))
+            (put! (:ac-chan app) {:player player :ac-idx new-ac-count})))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

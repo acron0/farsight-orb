@@ -46,20 +46,23 @@
           (map (fn [player]
                  (assoc player :team (:acronym team))) (get-roster team))) tier-1-teams))
 
+(defn create-player-tag [player]
+  (str (:team player) " " (:name player)))
+
 (def tier-1-player-names
   "The players formatted to just return their name and team tag"
-  (mapv (fn [player] (str (:team player) " " (:name player))) tier-1-players))
+  (mapv create-player-tag tier-1-players))
 
 (defn get-player-stats
   "returnd the stats of a player"
   ([player]
-    (:tournaments (esports/player-stats (:playerId player))))
+   (filter #(-> % :totalGold nil? not) (:tournaments (esports/player-stats (:playerId player)))))
   ([player tournament]
    (first (filter #(= (:tournamentId tournament) (:tournamentId %)) (get-player-stats player)))))
 
 (defn get-tournament-players
-  "returns all players in a tournament"
+  "returns all players in a tournament
   ([tournament]
-    (mapcat get-roster (get-teams tournament)))
+    (mapcat get-roster (get-teams tournament)))"
   ([tournament role]
     (filter #(= (:role %) (role roles)) (get-tournament-players tournament))))
